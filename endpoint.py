@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, abort
 import json
 from pymongo import Connection
 
@@ -30,13 +30,16 @@ def add_transaction():
             if i not in request.json:
                 abort(400)
 
-        assert request.json['client_id'] is not None
-        assert request.json['driver_id'] is not None
-        assert request.json['lat'] > 0
-        assert request.json['lng'] > 0
-        assert request.json['fare'] > 0
-        assert request.json['distance'] > 0
-        assert request.json['rating'] > 0
+        try:
+            assert request.json['client_id'] is not None
+            assert request.json['driver_id'] is not None
+            assert request.json['lat'] > 0
+            assert request.json['lng'] > 0
+            assert request.json['fare'] > 0
+            assert request.json['distance'] > 0
+            assert request.json['rating'] > 0
+        except AssertionError:
+            abort(400)
 
         record = {}
         record['client_id'] = request.json['client_id']
