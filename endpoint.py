@@ -14,7 +14,8 @@ keys = ['client_id', 'driver_id', 'lat', 'lng', 'fare',
     'distance', 'rating']
 
 @app.route('/', methods = ['GET'])
-def hello_word():
+def display_index():
+    ''' Return docs? '''
     if request.method == 'GET':
         return 'Hey there, try JSON!'
     else:
@@ -71,7 +72,7 @@ def record_trip_event():
 
 ''' Total trips recorded. '''
 @app.route('/total_trips.json', methods = ['GET'])
-def total_trips():
+def get_total_trips():
     result = {}
     result['total_trips'] = ridescoll.count()
     return jsonify(result), 201
@@ -79,14 +80,14 @@ def total_trips():
 ''' Total number of clients who have taken trips.
 A client in the \'ridescollection\' indicates a trip taken.'''
 @app.route('/unique_clients.json', methods = ['GET'])
-def total_clients_with_trips():
+def get_total_clients_with_trips():
     result = {}
     result['client_count'] = len(ridescoll.distinct('client_id'))
     return jsonify(result), 201
 
 ''' Total number of trips in the last hour. '''
 @app.route('/trips_in_last_hour.json', methods = ['GET'])
-def trips_in_last_hour():
+def get_trips_in_last_hour():
     ctimel = int(time.time())-3600
 
     records = []
@@ -101,11 +102,68 @@ def trips_in_last_hour():
     return jsonify(result), 201
 
 @app.route('/total_miles_per_client.json', methods = ['GET'])
-def total_miles_per_client():
+def get_total_miles_per_client():
     coll = clienttrip.find()
     result = {}
     for i in coll:
         result[i['client_id']] = i['distance']
+
+    return jsonify(result), 201
+
+''' Per city fare, city defined by a square.
+Data keys are defined by (lat, lng) tuples, not on boundary'''
+@app.route('/avg_city_fare.json', methods = ['GET'])
+def get_average_city_fare():
+    if not request.json:
+        abort(400)
+
+    try:
+        assert request.json['lat1'] > 0
+        assert request.json['lat2'] > 0
+        assert request.json['lng1'] > 0
+        assert request.json['lng2'] > 0
+    except AssertionError:
+        abort(400)
+
+    records = ridescoll.find({"$and":
+                              [{'lat': {"$gt": request.json['lat1']}},
+                               {'lat': {"$lt": request.json['lat2']}},
+                               {'lng': {"$gt": request.json['lng1']}},
+                               {'lng': {"$lt": request.json['lng2']}}
+                              ]})
+    sum = 0
+    for record in records:
+        sum += record['fare']
+
+    result = {}
+    result['lat1'] = request.json['lat1']
+    result['lat2'] = request.json['lat2']
+    result['lng1'] = request.json['lng1']
+    result['lng2'] = request.json['lng2']
+    result['average_fare'] = sum
+
+    return jsonify(result), 201
+
+@app.route('/median_drive_rating.json', methods = ['GET'])
+def get_median_driver_rating():
+    if not request.json:
+        abort(400)
+
+    try:
+        assert request.json['driver_id'] > 0
+    except AssertionError:
+        abort(400)
+
+    result = {}
+    result['drive_id'] = request.json['driver_id']
+    records = ridescoll.find({'driver_id': request.json['driver_id']}).sort('rating')
+    if records.count() == 0:
+        result['median_rating'] = -1
+    elif records.count() % 2 == 0:
+        result['median_rating'] = (records[records.count()/2]['rating']
+                                  +records[(records.count()-1)/2]['rating'])/2
+    else:
+        result['median_rating'] = records[records.count()/2]['rating']
 
     return jsonify(result), 201
 
