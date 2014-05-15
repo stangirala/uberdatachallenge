@@ -26,13 +26,10 @@ def get_average_city_fare():
             abort(400)
 
         if all (j in request.json for j in ('start_time', 'end_time')):
-            print 'SIX ARGS'
-            print '*****start_time type', type(request.json['start_time'])
             try:
                 assert type(request.json['start_time']) is int and request.json['start_time'] > 0
                 assert type(request.json['end_time']) is int and request.json['end_time'] > 0
             except AssertionError:
-                print 'ABORT SIZE ARGS'
                 abort(400)
             records = ridescoll.find({"$and":
                                         [{'lat': {"$gt": request.json['lat1']}},
@@ -45,7 +42,6 @@ def get_average_city_fare():
             result['start_time'] = request.json['start_time']
             result['end_time'] = request.json['end_time']
         else:
-            print 'COMPUTE FOUR ARGS'
             records = ridescoll.find({"$and":
                                         [{'lat': {"$gt": request.json['lat1']}},
                                          {'lat': {"$lt": request.json['lat2']}},
@@ -55,7 +51,6 @@ def get_average_city_fare():
         for record in records:
             sum += record['fare']
     else:
-        print 'ABORT FOUR ARGS'
         abort(400)
 
     result['lat1'] = request.json['lat1']

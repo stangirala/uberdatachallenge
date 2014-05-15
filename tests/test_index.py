@@ -10,6 +10,7 @@ def test_http():
 
     data = ''
     r = requests.get(url, data=json.dumps(data), headers=headers)
+    print r.text
     assert r.status_code == 200
 
     headers = {'content-type': 'text'}
