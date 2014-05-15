@@ -23,3 +23,6 @@ if __name__ == '__main__':
 
     print '***Client Distance in Range'
     client_distance(0, 100)
+
+    print '***Client Distance in Recent Range'
+    client_distance(1400121540, 1400186055)
