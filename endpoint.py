@@ -10,7 +10,7 @@ ridesdb = dbconn['ridesdb']
 ridescoll = ridesdb['ridescollection']
 clienttrip = ridesdb['clienttripcollection']
 
-keys = ['client_id', 'driver_id', 'lat', 'lng', 'fare',
+keys = ['client_id', 'driver_id', 'start_time', 'lat', 'lng', 'fare',
     'distance', 'rating']
 
 @app.route('/', methods = ['GET'])
@@ -35,6 +35,7 @@ def record_trip_event():
         try:
             assert request.json['client_id'] is not None
             assert request.json['driver_id'] is not None
+            assert request.json['start_time'] > 0
             assert request.json['lat'] > 0
             assert request.json['lng'] > 0
             assert request.json['fare'] > 0
@@ -70,29 +71,64 @@ def record_trip_event():
 
         return jsonify(record), 201
 
-''' Total trips recorded. '''
+''' Total trips recorded.
+Time is represented as seconds since unix epoch. '''
 @app.route('/total_trips.json', methods = ['GET'])
 def get_total_trips():
     result = {}
-    result['total_trips'] = ridescoll.count()
+    trips = 0
+    if request.json and ('start_time' and 'end_time' in request.json):
+        records = ridescoll.find({"$and": [{'start_time': {"$gt": request.json['start_time']}},
+                                           {'start_time': {"$lt": request.json['end_time']}}
+                                          ]})
+        trips = records.count()
+    else:
+        trips = ridescoll.count()
+
+    result['total_trips'] = trips
+
     return jsonify(result), 201
 
 ''' Total number of clients who have taken trips.
-A client in the \'ridescollection\' indicates a trip taken.'''
+A client in the \'ridescollection\' indicates a trip taken.
+Time is represented as seconds since unix epoch. '''
 @app.route('/unique_clients.json', methods = ['GET'])
 def get_total_clients_with_trips():
     result = {}
-    result['client_count'] = len(ridescoll.distinct('client_id'))
+    count = 0
+    if request.json and all (i in request.json for i in ('start_time', 'end_time')):
+        records = ridescoll.find({"$and": [{'start_time': {"$gt": request.json['start_time']}},
+                                           {'start_time': {"$lt": request.json['end_time']}}
+                                          ]})
+        count = len(records.distinct('client_id'))
+    elif request.json is None:
+        count = len(ridescoll.distinct('client_id'))
+    else:
+        abort(400)
+
+    result['client_count'] = count
+
     return jsonify(result), 201
 
-''' Total number of trips in the last hour. '''
-@app.route('/trips_in_last_hour.json', methods = ['GET'])
-def get_trips_in_last_hour():
-    ctimel = int(time.time())-3600
-
+''' Total number of trips in some time range. Default range is one hour.
+Function assumes inserts are not done in the future. If they are, then given
+and update function for distance and the fare should be specified in which case
+this method would have to be modified suitable.
+Time is represented as seconds since unix epoch. '''
+@app.route('/trips_in_time_range.json', methods = ['GET'])
+def get_trips_in_time_range():
     records = []
+    if request.json and all (i in request.json for i in ('start_time', 'end_time')):
+        collection = ridescoll.find({"$and": [{'start_time': {"$gt": request.json['start_time']}},
+                                              {'start_time': {"$lt": request.json['end_time']}}
+                                             ]})
+    else:
+        if request.json is None:
+            collection = ridescoll.find({'start_time': {"$gt": int(time.time())-3600}})
+        else:
+            abort(400)
 
-    for record in ridescoll.find({'start_time': {"$gt": ctimel}}):
+    for record in collection:
         del record['_id']
         records.append(record)
 
@@ -101,41 +137,81 @@ def get_trips_in_last_hour():
 
     return jsonify(result), 201
 
+'''Time is represented as seconds since unix epoch. '''
 @app.route('/total_miles_per_client.json', methods = ['GET'])
 def get_total_miles_per_client():
-    coll = clienttrip.find()
     result = {}
-    for i in coll:
-        result[i['client_id']] = i['distance']
+    coll = clienttrip.find()
+
+    if request.json and all (i in request.json for i in ('start_time', 'end_time')):
+        for i in coll:
+            total = 0
+            records = ridescoll.find({"$and": [{'client_id': i['client_id']},
+                                               {'start_time': {"$gt": request.json['start_time']}},
+                                               {'start_time': {"$lt": request.json['end_time']}}
+                                              ]})
+            for record in records:
+                total += record['distance']
+            result[i['client_id']] = total
+    elif request.json is None:
+        for i in coll:
+            result[i['client_id']] = i['distance']
+    else:
+        abort(400)
 
     return jsonify(result), 201
 
 ''' Per city fare, city defined by a square.
-Data keys are defined by (lat, lng) tuples, not on boundary'''
+Data keys are defined by (lat, lng) tuples, not on boundary.
+It's easier to specify two coordinates than distance on a globe, I think.
+Time is represented as seconds since unix epoch. '''
 @app.route('/avg_city_fare.json', methods = ['GET'])
 def get_average_city_fare():
-    if not request.json:
-        abort(400)
-
-    try:
-        assert request.json['lat1'] > 0
-        assert request.json['lat2'] > 0
-        assert request.json['lng1'] > 0
-        assert request.json['lng2'] > 0
-    except AssertionError:
-        abort(400)
-
-    records = ridescoll.find({"$and":
-                              [{'lat': {"$gt": request.json['lat1']}},
-                               {'lat': {"$lt": request.json['lat2']}},
-                               {'lng': {"$gt": request.json['lng1']}},
-                               {'lng': {"$lt": request.json['lng2']}}
-                              ]})
-    sum = 0
-    for record in records:
-        sum += record['fare']
 
     result = {}
+    sum = 0
+    if request.json and all (i in request.json for i in ('lat1', 'lng1', 'lat2', 'lng2')):
+        try:
+            assert (type(request.json['lat1']) is float or type(request.json['lat1'] is int)) and request.json['lat1'] > 0
+            assert (type(request.json['lat2']) is float or type(request.json['lat2'] is int)) and request.json['lat2'] > 0
+            assert (type(request.json['lng1']) is float or type(request.json['lng1'] is int)) and request.json['lng1'] > 0
+            assert (type(request.json['lng2']) is float or type(request.json['lng2'] is int)) and request.json['lng2'] > 0
+        except AssertionError:
+            abort(400)
+
+        if all (j in request.json for j in ('start_time', 'end_time')):
+            print 'SIX ARGS'
+            print '*****start_time type', type(request.json['start_time'])
+            try:
+                assert type(request.json['start_time']) is int and request.json['start_time'] > 0
+                assert type(request.json['end_time']) is int and request.json['end_time'] > 0
+            except AssertionError:
+                print 'ABORT SIZE ARGS'
+                abort(400)
+            records = ridescoll.find({"$and":
+                                        [{'lat': {"$gt": request.json['lat1']}},
+                                         {'lat': {"$lt": request.json['lat2']}},
+                                         {'lng': {"$gt": request.json['lng1']}},
+                                         {'lng': {"$lt": request.json['lng2']}},
+                                         {'start_time': {"$gt": request.json['start_time']}},
+                                         {'start_time': {"$lt": request.json['end_time']}}
+                                        ]})
+            result['start_time'] = request.json['start_time']
+            result['end_time'] = request.json['end_time']
+        else:
+            print 'COMPUTE FOUR ARGS'
+            records = ridescoll.find({"$and":
+                                        [{'lat': {"$gt": request.json['lat1']}},
+                                         {'lat': {"$lt": request.json['lat2']}},
+                                         {'lng': {"$gt": request.json['lng1']}},
+                                         {'lng': {"$lt": request.json['lng2']}}
+                                        ]})
+        for record in records:
+            sum += record['fare']
+    else:
+        print 'ABORT FOUR ARGS'
+        abort(400)
+
     result['lat1'] = request.json['lat1']
     result['lat2'] = request.json['lat2']
     result['lng1'] = request.json['lng1']
@@ -146,24 +222,38 @@ def get_average_city_fare():
 
 @app.route('/median_drive_rating.json', methods = ['GET'])
 def get_median_driver_rating():
-    if not request.json:
-        abort(400)
+    if 'driver_id' in request.json:
+        try:
+            assert type(request.json['driver_id']) is int
+        except AssertionError:
+            abort(400)
+        result = {}
+        result['drive_id'] = request.json['driver_id']
 
-    try:
-        assert request.json['driver_id'] > 0
-    except AssertionError:
-        abort(400)
+        if all (i in request.json for i in ('start_time', 'end_time')):
+            try:
+                assert type(request.json['start_time']) is int
+                assert type(request.json['end_time']) is int
+            except AssertionError:
+                abort(400)
 
-    result = {}
-    result['drive_id'] = request.json['driver_id']
-    records = ridescoll.find({'driver_id': request.json['driver_id']}).sort('rating', 1)
-    if records.count() == 0:
-        result['median_rating'] = -1
-    elif records.count() % 2 == 0:
-        result['median_rating'] = (records[records.count()/2]['rating']
-                                  +records[(records.count()-1)/2]['rating'])/2
+            records = ridescoll.find({"$and": [{'driver_id': request.json['driver_id']},
+                                               {'start_time': {"$gt": request.json['start_time']}},
+                                               {'end_time': {"$lt": request.json['end_time']}}
+                                              ]
+                                    }).sort('rating', 1)
+        else:
+            records = ridescoll.find({'driver_id': request.json['driver_id']}).sort('rating', 1)
+
+        if records.count() == 0:
+            result['median_rating'] = -1
+        elif records.count() % 2 == 0:
+            result['median_rating'] = (records[records.count()/2]['rating']
+                                       +records[(records.count()-1)/2]['rating'])/2
+        else:
+            result['median_rating'] = records[records.count()/2]['rating']
     else:
-        result['median_rating'] = records[records.count()/2]['rating']
+        abort(400)
 
     return jsonify(result), 201
 
