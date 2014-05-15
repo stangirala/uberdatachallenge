@@ -1,4 +1,4 @@
-from __init__ import dbconn, ridesdb, ridescoll, clienttrip, keys
+from __init__ import dbconn, ridesdb, ridescoll, clienttrip, keys, version
 
 from flask import Flask, request, jsonify, abort, Blueprint
 import json, time
@@ -8,7 +8,7 @@ add = Blueprint('add', __name__)
 
 ''' Returns request json object representing a sucessful insert.
 Time is represented as seconds since unix epoch. '''
-@add.route('/add.json', methods = ['POST'])
+@add.route('/'+version+'/add.json', methods = ['POST'])
 def record_trip_event():
     if not request.json:
         abort(400)

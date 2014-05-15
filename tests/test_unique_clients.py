@@ -1,7 +1,7 @@
 import requests
 import json, time, random
 
-main_url = 'http://127.0.0.1:5000/'
+main_url = 'http://127.0.0.1:5000/v1/'
 
 def client_count(start_time=None, end_time=None):
     url = main_url+'unique_clients.json'

@@ -1,5 +1,5 @@
-from __init__ import dbconn, ridesdb, ridescoll, clienttrip, keys
 # Globals defined in init
+from __init__ import dbconn, ridesdb, ridescoll, clienttrip, keys, version
 
 from flask import Flask, request, jsonify, abort, Blueprint
 import json, time
@@ -9,7 +9,7 @@ total_trips = Blueprint('total_trips', __name__)
 
 ''' Total trips recorded.
 Time is represented as seconds since unix epoch. '''
-@total_trips.route('/total_trips.json', methods = ['GET'])
+@total_trips.route('/'+version+'/total_trips.json', methods = ['GET'])
 def get_total_trips():
     result = {}
     trips = 0

@@ -8,3 +8,6 @@ clienttrip = ridesdb['clienttripcollection']
 
 keys = ['client_id', 'driver_id', 'start_time', 'lat', 'lng', 'fare',
         'distance', 'rating']
+
+# API version
+version = 'v1'

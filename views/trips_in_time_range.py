@@ -1,5 +1,5 @@
 # Globals defined in init
-from __init__ import dbconn, ridesdb, ridescoll, clienttrip, keys
+from __init__ import dbconn, ridesdb, ridescoll, clienttrip, keys, version
 
 from flask import Flask, request, jsonify, abort, Blueprint
 import json, time
@@ -12,7 +12,7 @@ Function assumes inserts are not done in the future. If they are, then given
 and update function for distance and the fare should be specified in which case
 this method would have to be modified suitable.
 Time is represented as seconds since unix epoch. '''
-@trips_in_time_range.route('/trips_in_time_range.json', methods = ['GET'])
+@trips_in_time_range.route('/'+version+'/trips_in_time_range.json', methods = ['GET'])
 def get_trips_in_time_range():
     records = []
     if request.json and all (i in request.json for i in ('start_time', 'end_time')):

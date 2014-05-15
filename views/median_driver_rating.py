@@ -1,5 +1,5 @@
 # Globals defined in init
-from __init__ import dbconn, ridesdb, ridescoll, clienttrip, keys
+from __init__ import dbconn, ridesdb, ridescoll, clienttrip, keys, version
 
 from flask import Flask, request, jsonify, abort, Blueprint
 import json, time
@@ -7,7 +7,7 @@ from pymongo import Connection
 
 median_driver_rating = Blueprint('median_driver_rating', __name__)
 
-@median_driver_rating.route('/median_drive_rating.json', methods = ['GET'])
+@median_driver_rating.route('/'+version+'/median_drive_rating.json', methods = ['GET'])
 def get_median_driver_rating():
     if 'driver_id' in request.json:
         try:
