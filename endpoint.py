@@ -156,7 +156,7 @@ def get_median_driver_rating():
 
     result = {}
     result['drive_id'] = request.json['driver_id']
-    records = ridescoll.find({'driver_id': request.json['driver_id']}).sort('rating')
+    records = ridescoll.find({'driver_id': request.json['driver_id']}).sort('rating', 1)
     if records.count() == 0:
         result['median_rating'] = -1
     elif records.count() % 2 == 0:
@@ -167,8 +167,7 @@ def get_median_driver_rating():
 
     return jsonify(result), 201
 
-def run_app(host=None, port=None):
-    debug = True
+def run_app(host=None, port=None, debug=False):
     if host is None or port is None:
         app.run(debug = debug)
     else:
