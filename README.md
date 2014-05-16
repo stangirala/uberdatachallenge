@@ -37,7 +37,8 @@ file.)
 * The API supports JSON. JSON objects are passed around to represent states.
 
 * The documentation of the code itself might be a bit fuzzy. I don't really
-have a fixed style.
+have a fixed style. (Today's post on hn seems to be an interesting answer to
+this: http://bit.ly/1lsjvdw)
 
 * Overall, the code should otherwise be mostly self-explanatory.
 
