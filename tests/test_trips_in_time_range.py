@@ -15,7 +15,7 @@ def trips_in_time_range(start_time=None, end_time=None):
 
     r = requests.get(url, data=json.dumps(data), headers=headers)
     print r.text
-    assert r.status_code == 201
+    assert r.status_code == 200
 
 if __name__ == '__main__':
     print '***Trips in last hour'
