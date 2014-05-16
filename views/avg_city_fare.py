@@ -7,12 +7,12 @@ from pymongo import Connection
 
 avg_city_fare = Blueprint('avg_city_fare', __name__)
 
-''' Per city fare, city defined by a square.
-Data keys are defined by (lat, lng) tuples, not on boundary.
-It's easier to specify two coordinates than distance on a globe, I think.
-Time is represented as seconds since unix epoch. '''
 @avg_city_fare.route('/'+version+'/avg_city_fare.json', methods = ['GET'])
 def get_average_city_fare():
+    ''' Per city fare, city defined by a square.
+    Data keys are defined by (lat, lng) tuples, not on boundary.
+    It's easier to specify two coordinates than distance on a globe, I think.
+    Time is represented as seconds since unix epoch. '''
 
     result = {}
     sum = 0

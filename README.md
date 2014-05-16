@@ -8,8 +8,9 @@ Notes
 
 * I have used flask for url routing. Gevent to serve the app at scale.
 I've used requests to write quick test apps that hit the apis endpoints.
-I've also used loads for load testing. The API functions can handle
-time based range operations.
+The test app represent a small subset of the quick and dirty tests
+I used. I've also used loads for load testing. The API functions can
+handle time based range operations.
 
 * At scale the genvets has considerable performance improvements as
 compared to the single threaded version. There are a couple of test
@@ -29,7 +30,9 @@ operations via their blueprints.
 
 * The API is versioned in the url. I think this is a better approach
 when compared to having it as state information being passed around in
-the requests and responses.
+the requests and responses. (Deprecating the current API would in this
+case probably involve adding dispatch routes for in the endpoint.py
+file.)
 
 * The API supports JSON. JSON objects are passed around to represent states.
 

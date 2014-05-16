@@ -7,9 +7,9 @@ from pymongo import Connection
 
 total_miles_per_client = Blueprint('/'+version+'total_miles_per_client', __name__)
 
-'''Time is represented as seconds since unix epoch. '''
 @total_miles_per_client.route('/'+version+'/total_miles_per_client.json', methods = ['GET'])
 def get_total_miles_per_client():
+    '''Time is represented as seconds since unix epoch. '''
     result = {}
     coll = clienttrip.find()
 

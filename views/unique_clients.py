@@ -7,11 +7,11 @@ from pymongo import Connection
 
 unique_clients = Blueprint('unique_clients', __name__)
 
-''' Total number of clients who have taken trips.
-A client in the \'ridescollection\' indicates a trip taken.
-Time is represented as seconds since unix epoch. '''
 @unique_clients.route('/'+version+'/unique_clients.json', methods = ['GET'])
 def get_total_clients_with_trips():
+    ''' Total number of clients who have taken trips.
+    A client in the \'ridescollection\' indicates a trip taken.
+    Time is represented as seconds since unix epoch. '''
     result = {}
     count = 0
     if request.json and all (i in request.json for i in ('start_time', 'end_time')):

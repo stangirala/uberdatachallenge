@@ -6,10 +6,10 @@ from pymongo import Connection
 
 add = Blueprint('add', __name__)
 
-''' Returns request json object representing a sucessful insert.
-Time is represented as seconds since unix epoch. '''
 @add.route('/'+version+'/add.json', methods = ['POST'])
 def record_trip_event():
+    ''' Returns request json object representing a sucessful insert.
+    Time is represented as seconds since unix epoch. '''
     if not request.json:
         abort(400)
     else:

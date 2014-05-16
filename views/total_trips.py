@@ -7,10 +7,10 @@ from pymongo import Connection
 
 total_trips = Blueprint('total_trips', __name__)
 
-''' Total trips recorded.
-Time is represented as seconds since unix epoch. '''
 @total_trips.route('/'+version+'/total_trips.json', methods = ['GET'])
 def get_total_trips():
+    ''' Total trips recorded.
+    Time is represented as seconds since unix epoch. '''
     result = {}
     trips = 0
     if request.json and ('start_time' and 'end_time' in request.json):
