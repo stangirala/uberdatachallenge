@@ -23,4 +23,4 @@ def get_total_trips():
 
     result['total_trips'] = trips
 
-    return jsonify(result), 201
+    return jsonify(result), 200

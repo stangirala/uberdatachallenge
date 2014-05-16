@@ -42,4 +42,4 @@ def get_median_driver_rating():
     else:
         abort(400)
 
-    return jsonify(result), 201
+    return jsonify(result), 200

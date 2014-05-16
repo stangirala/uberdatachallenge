@@ -32,4 +32,4 @@ def get_trips_in_time_range():
     result = {}
     result['trips'] = records
 
-    return jsonify(result), 201
+    return jsonify(result), 200

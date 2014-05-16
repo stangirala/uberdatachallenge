@@ -12,7 +12,7 @@ class TestCountEndpoint(TestCase):
         data = {}
         headers = {'content-type': 'text'}
         res = self.session.get(url, data=json.dumps(data), headers=headers)
-        self.assertEqual(res.status_code, 201)
+        self.assertEqual(res.status_code, 200)
 
     def test_count_range(self):
         data = {}
@@ -20,4 +20,4 @@ class TestCountEndpoint(TestCase):
         data['start_time'] = 0
         data['end_time'] = 100
         res = self.session.get(url, data=json.dumps(data), headers=headers)
-        self.assertEqual(res.status_code, 201)
+        self.assertEqual(res.status_code, 200)

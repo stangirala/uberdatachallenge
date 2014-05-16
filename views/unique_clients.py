@@ -26,4 +26,4 @@ def get_total_clients_with_trips():
 
     result['client_count'] = count
 
-    return jsonify(result), 201
+    return jsonify(result), 200

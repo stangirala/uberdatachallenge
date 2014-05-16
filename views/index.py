@@ -10,6 +10,6 @@ index = Blueprint('index', __name__)
 def display_index():
     ''' Return docs? '''
     if request.method == 'GET':
-        return 'Hey there, try JSON! Current API at v1.'
+        return 'Hey there, try JSON! Current API at v1.', 200
     else:
         abort(400)

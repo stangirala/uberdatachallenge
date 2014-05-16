@@ -59,4 +59,4 @@ def get_average_city_fare():
     result['lng2'] = request.json['lng2']
     result['average_fare'] = sum
 
-    return jsonify(result), 201
+    return jsonify(result), 200

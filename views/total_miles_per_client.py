@@ -29,4 +29,4 @@ def get_total_miles_per_client():
     else:
         abort(400)
 
-    return jsonify(result), 201
+    return jsonify(result), 200
