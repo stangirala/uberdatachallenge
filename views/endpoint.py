@@ -31,3 +31,6 @@ def run_app(host=None, port=None, debug=False):
         app.run(debug = debug)
     else:
         app.run(host=host, port=port, debug=True)
+
+def get_app():
+    return app
